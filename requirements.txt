@@ -1,4 +1,5 @@
-ollama
+playwright
+bs4
 requests
 pandas
 scikit-learn
@@ -6,3 +7,5 @@ xgboost
 joblib
 matplotlib
 seaborn
+python-dotenv
+dotenv
