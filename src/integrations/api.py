@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import requests
 
-API_URL = os.environ.get("API_URL")
+API_URL = os.environ.get("API_URL", "https://standing-wombat-211.convex.site")
 print(f"| API URL: {API_URL}")
 
 def get_routes():

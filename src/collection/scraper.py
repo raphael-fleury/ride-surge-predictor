@@ -4,7 +4,7 @@ import datetime
 from playwright.sync_api import sync_playwright
 from dotenv import load_dotenv
 
-from config.routes import routes
+from src.collection.uber_routes import get_uber_routes
 from .weather import get_current_weather
 from .auth import login_uber
 from .parser import extract_rides_from_html
@@ -17,12 +17,13 @@ INTERVAL_MINUTES = 15
 
 def run_job(page, context):
     print(f"\nCycle started at {datetime.datetime.now().strftime('%H:%M:%S')}")
-    weather_data = get_current_weather()
-    print(f"|🌤️| Temp: {weather_data['temperature']}°C | Rain: {weather_data['precipitation']}mm")
     
-    for route in routes:
-        print(f"| Route: {route['from']} -> {route['to']}")
+    for route in get_uber_routes():
+        print(f"| Route: {route['origin']['name']} -> {route['destination']['name']}")
         try:
+            weather_data = get_current_weather(route['origin']['lat'], route['origin']['lon'])
+            print(f"|🌤️| Temp: {weather_data['temperature']}°C | Rain: {weather_data['precipitation']}mm")
+
             def start_point():
                 page.goto(route['url'], timeout=60000)
                 time.sleep(15)
