@@ -1,11 +1,8 @@
 import requests
 
-LATITUDE = -23.9549098
-LONGITUDE = -46.3868865
-
-def get_current_weather():
+def get_current_weather(lat, lon):
     try:
-        url = f"https://api.open-meteo.com/v1/forecast?latitude={LATITUDE}&longitude={LONGITUDE}&current=temperature_2m,precipitation,weather_code"
+        url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,precipitation,weather_code"
         response = requests.get(url, timeout=10)
         if response.status_code == 200:
             data = response.json()

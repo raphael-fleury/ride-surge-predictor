@@ -2,24 +2,26 @@ import os
 import pandas as pd
 import json
 import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-PROCESSED_CSV = os.path.join(os.getcwd(), "data", "processed", "uber_dataset.csv")
+from src.integrations.api import get_rides
+
 EDA_OUTPUT_DIR = os.path.join(os.getcwd(), "data", "processed")
 
 def run_eda():
     print("| Starting Exploratory Data Analysis...")
     
-    if not os.path.exists(PROCESSED_CSV):
-        print(f"| Processed data not found at {PROCESSED_CSV}. Run --process first.")
-        return
-        
     try:
         # Load dataset
-        df = pd.read_csv(PROCESSED_CSV)
+        df = pd.DataFrame(get_rides())
         print(f"| Loaded {len(df)} rows for analysis.")
+        
+        if (len(df) == 0):
+            print("| No data available for EDA. Exiting.")
+            return
         
         # Generate JSON summary
         summary = {

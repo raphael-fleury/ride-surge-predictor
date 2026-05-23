@@ -10,6 +10,7 @@ parser.add_argument("--collect", action="store_true", help="Run the data collect
 parser.add_argument("--process", action="store_true", help="Clean data and engineer features for ML")
 parser.add_argument("--eda", action="store_true", help="Run Exploratory Data Analysis on processed data")
 parser.add_argument("--train", action="store_true", help="Train and evaluate ML models")
+parser.add_argument("--server", action="store_true", help="Start the HTTP prediction server")
 
 def check_directories():
     base = "data"
@@ -43,5 +44,17 @@ if __name__ == "__main__":
         from src.models import run_training
         print("Initializing ML Training Pipeline...")
         run_training()
+    elif args.server:
+        import uvicorn
+        from src.http import create_app
+        
+        app = create_app()
+        print("\n🚀 Starting Ride Surge Predictor API Server...")
+        print("📍 Server: http://localhost:8000")
+        print("📚 Docs: http://localhost:8000/docs")
+        print("🏥 Health: http://localhost:8000/health")
+        print("\nPress CTRL+C to stop the server\n")
+        
+        uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
     else:
-        print("No action specified. Use --collect, --process, --eda, or --train.")
+        print("No action specified. Use --collect, --process, --eda, --train, or --server.")

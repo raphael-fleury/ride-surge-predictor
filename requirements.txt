@@ -10,3 +10,5 @@ matplotlib
 seaborn
 python-dotenv
 dotenv
+fastapi
+uvicorn[standard]

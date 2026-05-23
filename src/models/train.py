@@ -5,19 +5,17 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
+from src.integrations.api import get_rides
+
 from .regressors import get_models
 from .evaluate import evaluate_model
 
-PROCESSED_CSV = os.path.join(os.getcwd(), "data", "processed", "uber_dataset.csv")
 MODELS_DIR = os.path.join(os.getcwd(), "models")
 
 def run_training():
-    if not os.path.exists(PROCESSED_CSV):
-        print(f"| Processed dataset not found at {PROCESSED_CSV}. Run --process first.")
-        return
-
-    print("| Loading dataset...")
-    df = pd.read_csv(PROCESSED_CSV)
+    print("| Loading rides from API...")
+    df = pd.DataFrame(get_rides())
+    print(f"| Total rides loaded: {len(df)}")
 
     # Sort Chronologically
     df['timestamp'] = pd.to_datetime(df['timestamp'])
@@ -55,6 +53,7 @@ def run_training():
     models = get_models()
     best_model_name = None
     best_r2 = -float('inf')
+    best_pipeline = None
 
     print("\n| Initiating Training and Evaluation...\n")
 
@@ -84,7 +83,13 @@ def run_training():
         if metrics['r2'] > best_r2:
             best_r2 = metrics['r2']
             best_model_name = name
+            best_pipeline = pipeline
+
+    # Save the best model as model.joblib
+    best_model_path = os.path.join(MODELS_DIR, "model.joblib")
+    joblib.dump(best_pipeline, best_model_path)
 
     print(f"| Training Phase Finished.")
     print(f"| Best Performing Model: {best_model_name} with R²: {best_r2:.4f}")
     print(f"| All trained pipelines saved successfully to the '/models' directory.")
+    print(f"| Best model saved as 'model.joblib'.")

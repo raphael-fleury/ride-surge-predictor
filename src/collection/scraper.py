@@ -4,11 +4,11 @@ import datetime
 from playwright.sync_api import sync_playwright
 from dotenv import load_dotenv
 
-from config.routes import routes
+from src.collection.uber_routes import get_uber_routes
 from .weather import get_current_weather
 from .auth import login_uber
 from .parser import extract_rides_from_html
-from .storage import save_to_csv
+from src.integrations.api import save_ride
 
 load_dotenv()
 
@@ -17,12 +17,13 @@ INTERVAL_MINUTES = 15
 
 def run_job(page, context):
     print(f"\nCycle started at {datetime.datetime.now().strftime('%H:%M:%S')}")
-    weather_data = get_current_weather()
-    print(f"|🌤️| Temp: {weather_data['temperature']}°C | Rain: {weather_data['precipitation']}mm")
     
-    for route in routes:
-        print(f"| Route: {route['from']} -> {route['to']}")
+    for route in get_uber_routes():
+        print(f"| Route: {route['origin']['name']} -> {route['destination']['name']}")
         try:
+            weather_data = get_current_weather(route['origin']['lat'], route['origin']['lon'])
+            print(f"|🌤️| Temp: {weather_data['temperature']}°C | Rain: {weather_data['precipitation']}mm")
+
             def start_point():
                 page.goto(route['url'], timeout=60000)
                 time.sleep(15)
@@ -39,8 +40,23 @@ def run_job(page, context):
             ride_data = extract_rides_from_html(page_content)
             
             if ride_data:
-                save_to_csv(timestamp, route, weather_data, ride_data)
-                print(f"    | Data extracted and appended to CSV.")
+                # Convert timestamp string to milliseconds for API
+                dt = datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+                timestamp_ms = int(dt.timestamp() * 1000)
+                
+                # Save each ride to API
+                for ride in ride_data:
+                    save_ride(
+                        route_id=route['id'],
+                        timestamp=timestamp_ms,
+                        ride_type=ride['ride_id'],
+                        price=ride['price'],
+                        wait_time=ride['wait_time_minutes'],
+                        temperature=weather_data['temperature'],
+                        precipitation=weather_data['precipitation'],
+                        weather_code=weather_data['weather_code']
+                    )
+                print(f"    | {len(ride_data)} rides saved to API.")
             else:
                 print("    | Extraction failed or no target rides found.")
                 
