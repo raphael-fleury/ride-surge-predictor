@@ -5,19 +5,17 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
+from src.integrations.api import get_rides
+
 from .regressors import get_models
 from .evaluate import evaluate_model
 
-PROCESSED_CSV = os.path.join(os.getcwd(), "data", "processed", "uber_dataset.csv")
 MODELS_DIR = os.path.join(os.getcwd(), "models")
 
 def run_training():
-    if not os.path.exists(PROCESSED_CSV):
-        print(f"| Processed dataset not found at {PROCESSED_CSV}. Run --process first.")
-        return
-
-    print("| Loading dataset...")
-    df = pd.read_csv(PROCESSED_CSV)
+    print("| Loading rides from API...")
+    df = pd.DataFrame(get_rides())
+    print(f"| Total rides loaded: {len(df)}")
 
     # Sort Chronologically
     df['timestamp'] = pd.to_datetime(df['timestamp'])
