@@ -1,10 +1,9 @@
+import logging
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import pandas as pd
-import logging
+from typing import Literal, Optional
 
-from src.collection.weather import get_current_weather
-from src.integrations.api import get_routes
+from src.models.predict import predict_price as get_prediction
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +15,10 @@ class PredictionRequest(BaseModel):
     origin: Location
     destination: Location
     datetime: str  # Format: "YYYY-MM-DD HH:MM:SS"
+    rideType: Literal["uber_x", "uber_moto", "comfort", "bag"]
+    temperature: Optional[float] = None  # Optional, in Celsius
+    precipitation: Optional[float] = None  # Optional, in mm
+    weatherCode: Optional[int] = None  # Optional, WMO weather code
 
 class PredictionResponse(BaseModel):
     predicted_price: float
@@ -42,34 +45,42 @@ def create_app():
     @app.post("/predict", response_model=PredictionResponse)
     def predict_price(request: PredictionRequest):
         """
-        Predicts ride price based on origin, destination, and datetime.
+        Predicts ride price based on origin, destination, and other parameters.
         
         Parameters:
         - origin: {latitude, longitude}
         - destination: {latitude, longitude}
         - datetime: "YYYY-MM-DD HH:MM:SS"
+        - rideType: one of ["uber_x", "uber_moto", "comfort", "bag"]
+        - temperature: float (optional, temperature in Celsius, defaults to 25.0)
+        - precipitation: float (optional, precipitation in mm, defaults to 0.0)
+        - weatherCode: int (optional, WMO weather code, defaults to 0)
         
         Returns predicted price and model information.
         """
         
         try:
-            # Get weather data for origin location
-            weather = get_current_weather(request.origin.latitude, request.origin.longitude)
+            # Use default values if weather parameters are not provided
+            temperature_celsius = request.temperature if request.temperature is not None else 25.0
+            precipitation_mm = request.precipitation if request.precipitation is not None else 0.0
+            weather_code = request.weatherCode if request.weatherCode is not None else 0
             
-            predicted_price = predict_price(
+            # Call the prediction function from predict.py
+            predicted_price = get_prediction(
+                ride_type=request.rideType,
                 datetime=request.datetime,
                 wait_time_minutes=5.0,  # Default wait time
-                temperature_celsius=weather.get('temperature') or 25.0,
-                precipitation_mm=weather.get('precipitation') or 0.0,
-                weather_code=int(weather.get('weather_code') or 0),
+                temperature_celsius=temperature_celsius,
+                precipitation_mm=precipitation_mm,
+                weather_code=weather_code,
                 origin_lat=request.origin.latitude,
                 origin_lon=request.origin.longitude,
                 dest_lat=request.destination.latitude,
                 dest_lon=request.destination.longitude
             )
             
-            # Determine confidence level based on certain conditions
-            confidence = "high" if weather.get('temperature') is not None else "medium"
+            # Determine confidence level based on whether weather data was provided
+            confidence = "high" if request.temperature is not None else "medium"
             
             return PredictionResponse(
                 predicted_price=float(predicted_price),

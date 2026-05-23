@@ -62,6 +62,7 @@ def transform_ride(ride):
         'minute': minute,
         'day_of_week': day_of_week,
         'is_weekend': is_weekend,
+        'route_id': ride.get('route', ''),
         'route_name': f"{origin_name} -> {destination_name}"
     }
 
