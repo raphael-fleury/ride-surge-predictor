@@ -53,6 +53,7 @@ def run_training():
     models = get_models()
     best_model_name = None
     best_r2 = -float('inf')
+    best_pipeline = None
 
     print("\n| Initiating Training and Evaluation...\n")
 
@@ -82,7 +83,13 @@ def run_training():
         if metrics['r2'] > best_r2:
             best_r2 = metrics['r2']
             best_model_name = name
+            best_pipeline = pipeline
+
+    # Save the best model as model.joblib
+    best_model_path = os.path.join(MODELS_DIR, "model.joblib")
+    joblib.dump(best_pipeline, best_model_path)
 
     print(f"| Training Phase Finished.")
     print(f"| Best Performing Model: {best_model_name} with R²: {best_r2:.4f}")
     print(f"| All trained pipelines saved successfully to the '/models' directory.")
+    print(f"| Best model saved as 'model.joblib'.")

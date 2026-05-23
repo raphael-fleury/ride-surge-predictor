@@ -1,10 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Optional
 import os
 import joblib
 import pandas as pd
-from datetime import datetime
 import logging
 
 from src.collection.weather import get_current_weather
@@ -30,33 +28,17 @@ MODELS_DIR = os.path.join(os.getcwd(), "models")
 
 def load_best_model():
     """Loads the best trained model from disk."""
-    model_files = {
-        'xgboost': 'xgboost.joblib',
-        'random_forest': 'random_forest.joblib',
-        'linear_regression': 'regressão_linear_baseline.joblib'
-    }
+    model_path = os.path.join(MODELS_DIR, "model.joblib")
     
-    best_model = None
-    best_model_name = None
+    if not os.path.exists(model_path):
+        raise RuntimeError("Model file 'model.joblib' not found. Please run training first.")
     
-    # Try to load XGBoost first (usually the best performer)
-    for model_key, filename in model_files.items():
-        filepath = os.path.join(MODELS_DIR, filename)
-        if os.path.exists(filepath):
-            try:
-                model = joblib.load(filepath)
-                best_model = model
-                best_model_name = model_key
-                if model_key == 'xgboost':  # XGBoost is preferred if available
-                    break
-            except Exception as e:
-                logger.warning(f"Failed to load {filename}: {e}")
-                continue
-    
-    if best_model is None:
-        raise RuntimeError("No trained models found in models/ directory")
-    
-    return best_model, best_model_name
+    try:
+        model = joblib.load(model_path)
+        return model, "best_model"
+    except Exception as e:
+        logger.error(f"Failed to load model: {e}")
+        raise RuntimeError(f"Error loading model: {e}")
 
 def get_route_name(origin_lat, origin_lon, dest_lat, dest_lon):
     """Attempts to find matching route from available routes."""
