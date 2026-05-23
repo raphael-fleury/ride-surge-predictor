@@ -64,4 +64,41 @@ def transform_ride(ride):
         'is_weekend': is_weekend,
         'route_name': f"{origin_name} -> {destination_name}"
     }
+
+
+def save_ride(route_id, timestamp, ride_type, price, wait_time, temperature, precipitation, weather_code):
+    """
+    Saves a ride to the API.
+    
+    Args:
+        route_id: Route identifier
+        timestamp: Unix timestamp in milliseconds
+        ride_type: Type of ride (e.g., 'UberX', 'UberXL')
+        price: Ride price
+        wait_time: Waiting time in minutes
+        temperature: Temperature in Celsius
+        precipitation: Precipitation in mm
+        weather_code: Weather code (0-100)
+        
+    Returns:
+        Response status (201 for success, or error details)
+    """
+    try:
+        payload = {
+            "route": route_id,
+            "timestamp": timestamp,
+            "rideType": ride_type,
+            "price": price,
+            "waitTime": wait_time,
+            "temperature": temperature,
+            "precipitation": precipitation,
+            "weatherCode": weather_code
+        }
+        
+        response = requests.post(f"{API_URL}/rides", json=payload)
+        response.raise_for_status()
+        return {"status": 201, "message": "Ride saved successfully"}
+    except requests.RequestException as e:
+        print(f"| Error saving ride: {e}")
+        return {"status": response.status_code if 'response' in locals() else 500, "error": str(e)}
     
