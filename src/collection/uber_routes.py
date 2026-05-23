@@ -49,6 +49,7 @@ def transform_route(route_data):
     url = f"{base_url}?drop%5B0%5D={drop_encoded}&pickup={pickup_encoded}&vehicle=10000294"
     
     return {
+        "id": route_data.get("_id", ""),
         "origin": {
             "name": origin.get("name", ""),
             "display_name": origin.get("display_name", ""),
