@@ -32,6 +32,8 @@ A CLI application to collect Uber ride data, extract pricing via LLMs, process, 
 
 You can run each phase of the data pipeline using `main.py`:
 
+> **Note:** For Machine Learning models to learn accurately and capture ride pricing patterns, waiting times, weekend spikes, and varying weather phenomena, we strongly recommend leaving `--collect` running continuously for **at least 1 to 4 weeks** before attempting the `--process` and `--train` phases. Otherwise, your trees (XGBoost/LightGBM) will severely overfit a tinyt dataset.
+
 ```bash
 python main.py --collect
 python main.py --process

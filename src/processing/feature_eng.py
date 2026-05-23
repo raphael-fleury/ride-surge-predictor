@@ -35,8 +35,8 @@ def clean_data(df):
 def engineer_features(df):
     """Creates time-series features for Machine Learning."""
     
-    # Parse timestamps (Format: 20260511_104100)
-    df['timestamp'] = pd.to_datetime(df['timestamp'], format='%Y%m%d_%H%M%S')
+    # Parse timestamps (Format: 2026-05-21 17:50:09)
+    df['timestamp'] = pd.to_datetime(df['timestamp'], format='%Y-%m-%d %H:%M:%S')
     
     # Extract temporal features
     df['hour'] = df['timestamp'].dt.hour

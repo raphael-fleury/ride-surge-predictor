@@ -4,6 +4,7 @@ requests
 pandas
 scikit-learn
 xgboost
+lightgbm
 joblib
 matplotlib
 seaborn
