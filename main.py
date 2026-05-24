@@ -4,6 +4,9 @@
 
 import argparse
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 parser = argparse.ArgumentParser(description="Ride Surge Predictor Data Pipeline")
 parser.add_argument("--collect", action="store_true", help="Run the data collection (Playwright Scraping + Weather API -> CSV)")
