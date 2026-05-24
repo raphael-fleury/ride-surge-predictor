@@ -72,6 +72,9 @@ def init_scheduler():
     """Initialize and start the background scheduler."""
     scheduler = BackgroundScheduler()
     
+    run_eda_task()  # Run EDA immediately on startup
+    run_training_task()  # Run training immediately on startup
+    
     scheduler.add_job(
         run_eda_task,
         trigger=IntervalTrigger(hours=EDA_INTERVAL_HOURS),
