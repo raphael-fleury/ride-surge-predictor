@@ -29,7 +29,7 @@ def predict_price(ride_type, datetime, wait_time_minutes, temperature_celsius, p
     
     hour, minute, day_of_week, is_weekend = extract_datetime_features(datetime)
     features = pd.DataFrame({
-        'ride_type': [ride_type],
+        'ride_id': [ride_type],
         'route_name': [get_route_name(origin_lat, origin_lon, dest_lat, dest_lon)],
         'weather_code': [weather_code],
         'wait_time_minutes': [wait_time_minutes],
