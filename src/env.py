@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # API Configuration
-API_PORT = int(os.getenv("API_PORT", 8000))
+PORT = int(os.getenv("PORT", 8000))
 
 # Convex API URL
 CONVEX_URL = os.getenv("CONVEX_URL", "https://standing-wombat-211.convex.site")

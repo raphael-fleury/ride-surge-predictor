@@ -4,7 +4,7 @@
 
 import argparse
 import os
-from src.env import API_PORT as PORT
+from src.env import PORT
 
 parser = argparse.ArgumentParser(description="Ride Surge Predictor Data Pipeline")
 parser.add_argument("--collect", action="store_true", help="Run the data collection (Playwright Scraping + Weather API -> CSV)")
