@@ -1,7 +1,9 @@
 import logging
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Literal, Optional
+from datetime import datetime
 
 from src.models.predict import predict_price as get_prediction
 
@@ -25,21 +27,100 @@ class PredictionResponse(BaseModel):
     model_used: str
     confidence: str
 
+class SchedulerJob(BaseModel):
+    id: str
+    name: str
+    next_run_time: Optional[str]
+    trigger: str
+
 def create_app():
     """Creates and configures the FastAPI application."""
+    
+    # Initialize scheduler on app startup
+    from src.scheduler import init_scheduler
+    
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        """Manage application lifespan: startup and shutdown events."""
+        # Startup - Initialize app state
+        app.state.model = None
+        app.state.model_name = "Not loaded"
+        
+        try:
+            app.state.scheduler = init_scheduler()
+        except Exception as e:
+            logger.error(f"Failed to initialize scheduler: {e}")
+            print(f"⚠️  Warning: Could not initialize scheduler: {e}")
+        
+        yield
+        
+        # Shutdown
+        if hasattr(app.state, "scheduler"):
+            app.state.scheduler.shutdown()
+            logger.info("Scheduler shutdown successfully")
+    
     app = FastAPI(
         title="Ride Surge Predictor API",
         description="API for predicting ride prices based on origin, destination, and datetime",
-        version="1.0.0"
+        version="1.0.0",
+        lifespan=lifespan
     )
     
     @app.get("/health")
     def health_check():
         """Health check endpoint."""
+        try:
+            model_loaded = getattr(app.state, "model", None) is not None
+            model_name = getattr(app.state, "model_name", "Unknown")
+            scheduler_running = hasattr(app.state, "scheduler") and (getattr(app.state, "scheduler", None) is not None)
+            
+            return {
+                "status": "ok",
+                "model_loaded": model_loaded,
+                "model_name": model_name,
+                "scheduler_running": scheduler_running,
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            logger.error(f"Health check error: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+    
+    @app.get("/scheduler/jobs", response_model=list[SchedulerJob])
+    def list_scheduler_jobs():
+        """List all scheduled jobs."""
+        if not hasattr(app.state, "scheduler"):
+            raise HTTPException(status_code=503, detail="Scheduler not initialized")
+        
+        jobs = []
+        for job in app.state.scheduler.get_jobs():
+            jobs.append(SchedulerJob(
+                id=job.id,
+                name=job.name,
+                next_run_time=job.next_run_time.isoformat() if job.next_run_time else None,
+                trigger=str(job.trigger)
+            ))
+        return jobs
+    
+    @app.get("/scheduler/status")
+    def scheduler_status():
+        """Get scheduler status."""
+        if not hasattr(app.state, "scheduler"):
+            return {"status": "not_initialized"}
+        
+        scheduler = app.state.scheduler
+        jobs = scheduler.get_jobs()
+        
         return {
-            "status": "ok",
-            "model_loaded": app.state.model is not None,
-            "model_name": app.state.model_name
+            "status": "running" if scheduler.running else "stopped",
+            "jobs_count": len(jobs),
+            "jobs": [
+                {
+                    "id": job.id,
+                    "name": job.name,
+                    "next_run": job.next_run_time.isoformat() if job.next_run_time else None
+                }
+                for job in jobs
+            ]
         }
     
     @app.post("/predict", response_model=PredictionResponse)

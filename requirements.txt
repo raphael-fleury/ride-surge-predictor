@@ -12,3 +12,4 @@ python-dotenv
 dotenv
 fastapi
 uvicorn[standard]
+apscheduler
