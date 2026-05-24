@@ -8,9 +8,7 @@ import os
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
-
-TRAINING_INTERVAL_HOURS = int(os.getenv("TRAINING_INTERVAL_HOURS", 24))
-EDA_INTERVAL_HOURS = int(os.getenv("EDA_INTERVAL_HOURS", 24))
+from src.env import TRAINING_INTERVAL_HOURS, EDA_INTERVAL_HOURS
 
 logger = logging.getLogger(__name__)
 

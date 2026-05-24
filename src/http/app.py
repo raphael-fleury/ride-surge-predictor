@@ -6,6 +6,7 @@ from typing import Literal, Optional
 from datetime import datetime
 
 from src.models.predict import predict_price as get_prediction
+from src.env import API_PORT
 
 logger = logging.getLogger(__name__)
 
@@ -180,4 +181,4 @@ def create_app():
 if __name__ == "__main__":
     import uvicorn
     app = create_app()
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=API_PORT)

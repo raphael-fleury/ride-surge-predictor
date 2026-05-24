@@ -1,13 +1,12 @@
 import os
 import pandas as pd
 import requests
-
-API_URL = os.environ.get("API_URL", "https://standing-wombat-211.convex.site")
+from src.env import CONVEX_URL
 
 def get_routes():
     """Fetches all available routes from the API."""
     try:
-        response = requests.get(f"{API_URL}/routes")
+        response = requests.get(f"{CONVEX_URL}/routes")
         response.raise_for_status()
         return response.json()
     except requests.RequestException as e:
@@ -17,7 +16,7 @@ def get_routes():
 def get_rides():
     """Fetches all processed ride data from the API."""
     try:
-        response = requests.get(f"{API_URL}/rides")
+        response = requests.get(f"{CONVEX_URL}/rides")
         response.raise_for_status()
         return [transform_ride(ride) for ride in response.json()]
     except requests.RequestException as e:
@@ -27,7 +26,7 @@ def get_rides():
 def get_rides_by_route(route_id):
     """Fetches rides filtered by route from the API."""
     try:
-        response = requests.get(f"{API_URL}/rides?routeId={route_id}")
+        response = requests.get(f"{CONVEX_URL}/rides?routeId={route_id}")
         response.raise_for_status()
         return [transform_ride(ride) for ride in response.json()]
     except requests.RequestException as e:
@@ -96,7 +95,7 @@ def save_ride(route_id, timestamp, ride_type, price, wait_time, temperature, pre
             "weatherCode": weather_code
         }
         
-        response = requests.post(f"{API_URL}/rides", json=payload)
+        response = requests.post(f"{CONVEX_URL}/rides", json=payload)
         response.raise_for_status()
         return {"status": 201, "message": "Ride saved successfully"}
     except requests.RequestException as e:

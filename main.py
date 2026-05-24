@@ -4,10 +4,7 @@
 
 import argparse
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
-PORT = int(os.getenv("API_PORT", 8000))
+from src.env import API_PORT as PORT
 
 parser = argparse.ArgumentParser(description="Ride Surge Predictor Data Pipeline")
 parser.add_argument("--collect", action="store_true", help="Run the data collection (Playwright Scraping + Weather API -> CSV)")
