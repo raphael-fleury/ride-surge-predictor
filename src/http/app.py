@@ -1,4 +1,6 @@
 import logging
+import os
+import joblib
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -34,6 +36,27 @@ class SchedulerJob(BaseModel):
     next_run_time: Optional[str]
     trigger: str
 
+def load_model():
+    """Load the trained model from disk."""
+    model_path = os.path.join(os.getcwd(), "models", "model.joblib")
+    try:
+        if os.path.exists(model_path):
+            model = joblib.load(model_path)
+            # Try to extract model name from the pipeline's final estimator
+            if hasattr(model, 'named_steps') and 'model' in model.named_steps:
+                model_obj = model.named_steps['model']
+                model_name = type(model_obj).__name__
+            else:
+                model_name = "Loaded Model"
+            logger.info(f"Model loaded successfully: {model_name}")
+            return model, model_name
+        else:
+            logger.warning(f"Model file not found at {model_path}")
+            return None, "Not found"
+    except Exception as e:
+        logger.error(f"Error loading model: {e}")
+        return None, f"Error: {str(e)}"
+
 def create_app():
     """Creates and configures the FastAPI application."""
     
@@ -44,8 +67,7 @@ def create_app():
     async def lifespan(app: FastAPI):
         """Manage application lifespan: startup and shutdown events."""
         # Startup - Initialize app state
-        app.state.model = None
-        app.state.model_name = "Not loaded"
+        app.state.model, app.state.model_name = load_model()
         
         try:
             app.state.scheduler = init_scheduler()
