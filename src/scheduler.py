@@ -9,6 +9,9 @@ from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
+TRAINING_INTERVAL_HOURS = int(os.getenv("TRAINING_INTERVAL_HOURS", 24))
+EDA_INTERVAL_HOURS = int(os.getenv("EDA_INTERVAL_HOURS", 24))
+
 logger = logging.getLogger(__name__)
 
 # Create logs directory if it doesn't exist
@@ -69,33 +72,31 @@ def init_scheduler():
     """Initialize and start the background scheduler."""
     scheduler = BackgroundScheduler()
     
-    # Schedule EDA to run every 24 hours (at midnight)
     scheduler.add_job(
         run_eda_task,
-        trigger=IntervalTrigger(hours=24),
+        trigger=IntervalTrigger(hours=EDA_INTERVAL_HOURS),
         id="eda_job",
         name="EDA Task",
         replace_existing=True,
         max_instances=1  # Prevent concurrent executions
     )
     
-    # Schedule training to run every 24 hours (1 hour after EDA)
     scheduler.add_job(
         run_training_task,
-        trigger=IntervalTrigger(hours=24),
+        trigger=IntervalTrigger(hours=TRAINING_INTERVAL_HOURS),
         id="training_job",
         name="Training Task",
         replace_existing=True,
         max_instances=1,  # Prevent concurrent executions
-        minutes=60  # Run 1 hour after EDA
     )
     
     scheduler.start()
     
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     logger.info(f"[{timestamp}] Scheduler initialized and started")
-    print(f"\n✅ Scheduler initialized - EDA and Training will run every 24 hours")
+    print(f"\n✅ Scheduler initialized - EDA will run every {EDA_INTERVAL_HOURS} hours")
+    print(f"   Training will run every {TRAINING_INTERVAL_HOURS} hours")
     print(f"   📊 EDA logs: {os.path.join(LOGS_DIR, 'scheduler.log')}")
-    print(f"   🤖 Next execution in ~24 hours\n")
+    print(f"   🤖 Training logs: {os.path.join(LOGS_DIR, 'scheduler.log')}")
     
     return scheduler
