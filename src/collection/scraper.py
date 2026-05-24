@@ -2,15 +2,12 @@ import time
 import os
 import datetime
 from playwright.sync_api import sync_playwright
-from dotenv import load_dotenv
 
 from src.collection.uber_routes import get_uber_routes
 from .weather import get_current_weather
 from .auth import login_uber
 from .parser import extract_rides_from_html
 from src.integrations.api import save_ride
-
-load_dotenv()
 
 COOKIES_FILE = os.path.join(os.getcwd(), "config", "cookies.json")
 INTERVAL_MINUTES = 15

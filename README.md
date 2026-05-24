@@ -39,12 +39,29 @@ python main.py --collect
 python main.py --process
 python main.py --eda
 python main.py --train
+python main.py --server
 ```
 
 * `--collect`: Runs Playwright headless browser to load predefined routes and directly extracts pricing and wait times locally into `data/interim/uber_rides_log.csv`.
 * `--process`: Cleans data and engineers features for ML.
 * `--eda`: Runs Exploratory Data Analysis.
 * `--train`: Trains and evaluates the ML prediction models.
+* `--server`: Starts the prediction API server with **automatic EDA & Training scheduler** (runs every 24 hours).
+
+### 🤖 Automated EDA & Training (Every 24 Hours)
+
+The API server includes an **automatic scheduler** that executes EDA and training tasks every 24 hours:
+
+```bash
+python main.py --server
+```
+
+**Features:**
+- ✅ Automatically runs EDA every 24 hours
+- ✅ Automatically trains models every 24 hours (1 hour after EDA)
+- ✅ Detailed logging in `logs/scheduler.log`
+- ✅ Monitor status via HTTP endpoints: `/scheduler/status` and `/scheduler/jobs`
+```
 
 ## Enviroment Variables template (.env)
 uber_login=

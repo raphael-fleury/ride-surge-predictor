@@ -4,6 +4,7 @@
 
 import argparse
 import os
+from src.env import PORT
 
 parser = argparse.ArgumentParser(description="Ride Surge Predictor Data Pipeline")
 parser.add_argument("--collect", action="store_true", help="Run the data collection (Playwright Scraping + Weather API -> CSV)")
@@ -50,11 +51,11 @@ if __name__ == "__main__":
         
         app = create_app()
         print("\n🚀 Starting Ride Surge Predictor API Server...")
-        print("📍 Server: http://localhost:8000")
-        print("📚 Docs: http://localhost:8000/docs")
-        print("🏥 Health: http://localhost:8000/health")
+        print(f"📍 Server: http://localhost:{PORT}")
+        print(f"📚 Docs: http://localhost:{PORT}/docs")
+        print(f"🏥 Health: http://localhost:{PORT}/health")
         print("\nPress CTRL+C to stop the server\n")
         
-        uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+        uvicorn.run(app, host="0.0.0.0", port=PORT, log_level="info")
     else:
         print("No action specified. Use --collect, --process, --eda, --train, or --server.")
