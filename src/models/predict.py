@@ -1,8 +1,7 @@
 import os
 import joblib
+import logging
 import pandas as pd
-from uvicorn import logging
-
 from src.integrations.api import get_routes
 
 MODELS_DIR = os.path.join(os.getcwd(), "models")
