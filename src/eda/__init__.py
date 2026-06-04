@@ -3,6 +3,8 @@ import pandas as pd
 import json
 import matplotlib
 
+from src.processing.feature_eng import clean_data, engineer_features
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -16,9 +18,9 @@ def run_eda():
     
     try:
         # Load dataset
-        df = pd.DataFrame(get_rides())
+        df = pd.DataFrame(get_rides()).pipe(clean_data).pipe(engineer_features)
         print(f"| Loaded {len(df)} rows for analysis.")
-        
+
         if (len(df) == 0):
             print("| No data available for EDA. Exiting.")
             return
@@ -71,7 +73,12 @@ def run_eda():
         plt.close()
 
         # Plot 4: Correlation Heatmap (numerical columns only)
-        num_cols = ['price', 'wait_time_minutes', 'temperature_celsius', 'precipitation_mm', 'hour']
+        num_cols = [
+            'price_per_meter', 'price_per_min', 'wait_time_minutes',
+            'distance_m', 'estimated_time_s',
+            'temperature_celsius', 'precipitation_mm', 'weather_code',
+            'hour', 'minute', 'day_of_week', 'is_weekend'
+        ]
         plt.figure(figsize=(8, 6))
         sns.heatmap(df[num_cols].corr(), annot=True, cmap='coolwarm', fmt=".2f")
         plt.title("Matriz de Correlação das Features")

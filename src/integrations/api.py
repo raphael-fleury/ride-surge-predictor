@@ -37,32 +37,22 @@ def get_rides_by_route(route_id):
 def transform_ride(ride):
     timestamp_ms = ride.get('timestamp', 0)
     dt = pd.to_datetime(timestamp_ms, unit='ms')
-    
-    # Extract temporal features
-    hour = dt.hour
-    minute = dt.minute
-    day_of_week = dt.dayofweek  # 0=Monday, 6=Sunday
-    is_weekend = 1 if day_of_week >= 5 else 0
-    
-    # Create transformed record
+
     origin_name = ride.get("origin", {}).get("name", "")
     destination_name = ride.get("destination", {}).get("name", "")
     return {
         'timestamp': dt,
         'from': origin_name,
         'to': destination_name,
+        'route_id': ride.get('route', ''),
+        'distance_m': ride.get('distance', 0),
+        'estimated_time_s': ride.get('duration', 0),
         'ride_id': ride.get('rideType', ''),
         'price': ride.get('price', 0),
         'wait_time_minutes': ride.get('waitTime', 0),
         'temperature_celsius': ride.get('temperature', 0),
         'precipitation_mm': ride.get('precipitation', 0),
-        'weather_code': ride.get('weatherCode', 0),
-        'hour': hour,
-        'minute': minute,
-        'day_of_week': day_of_week,
-        'is_weekend': is_weekend,
-        'route_id': ride.get('route', ''),
-        'route_name': f"{origin_name} -> {destination_name}"
+        'weather_code': ride.get('weatherCode', 0)
     }
 
 

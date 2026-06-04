@@ -1,8 +1,7 @@
 import pandas as pd
-import numpy as np
 
 # valid categories
-VALID_CATEGORIES =['uber_x', 'uber_moto', 'comfort', 'bag']
+VALID_CATEGORIES = ['uber_x', 'uber_moto', 'comfort', 'bag']
 
 def clean_data(df):
     """Applies strict filtering to remove LLM hallucinations and bad data."""
@@ -21,6 +20,12 @@ def clean_data(df):
     # Filter Zeroes, Negatives, and Absurd values.
     df = df[(df['price'] > 0) & (df['price'] < 400.0)] # 400 max value
     df = df[(df['wait_time_minutes'] >= 0) & (df['wait_time_minutes'] < 60)]
+    
+    # Handle missing weather data (if Open-Meteo API failed during a ping)
+    # We forward-fill the last known weather, then fill remaining with 0 or mean.
+    df['temperature_celsius'] = df['temperature_celsius'].ffill().fillna(df['temperature_celsius'].mean())
+    df['precipitation_mm'] = df['precipitation_mm'].fillna(0.0)
+    df['weather_code'] = df['weather_code'].fillna(0).astype(int)
     
     # Filter invalid ride categories (hallucinated by LLM)
     df = df[df['ride_id'].isin(VALID_CATEGORIES)]
@@ -44,10 +49,9 @@ def engineer_features(df):
     df['day_of_week'] = df['timestamp'].dt.dayofweek # 0=Monday, 6=Sunday
     df['is_weekend'] = df['day_of_week'].apply(lambda x: 1 if x >= 5 else 0)
     
-    # Handle missing weather data (if Open-Meteo API failed during a ping)
-    # We forward-fill the last known weather, then fill remaining with 0 or mean.
-    df['temperature_celsius'] = df['temperature_celsius'].ffill().fillna(df['temperature_celsius'].mean())
-    df['precipitation_mm'] = df['precipitation_mm'].fillna(0.0)
+    # Calculated features
+    df['price_per_meter'] = df.apply(lambda row: row['price'] / row['distance_m'] if row['distance_m'] > 0 else 0, axis=1)
+    df['price_per_min'] = df.apply(lambda row: row['price'] / (row['estimated_time_s'] / 60) if row['estimated_time_s'] > 0 else 0, axis=1)
     
     # Route encoding: Create a string identifier for the route
     # This helps models like Random Forest later via One-Hot Encoding
