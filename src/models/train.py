@@ -6,7 +6,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from src.integrations.api import get_rides
-from src.processing.feature_eng import clean_data, engineer_features
+from src.processing.feature_eng import prepare_data
 
 from .regressors import get_models
 from .evaluate import evaluate_model
@@ -15,8 +15,7 @@ MODELS_DIR = os.path.join(os.getcwd(), "models")
 
 def run_training():
     print("| Loading rides from API...")
-    df = pd.DataFrame(get_rides())
-    df = engineer_features(clean_data(df))
+    df = pd.DataFrame(get_rides()).pipe(prepare_data)
     
     print(f"| Total rides loaded: {len(df)}")
 

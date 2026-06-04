@@ -3,7 +3,7 @@ import pandas as pd
 import json
 import matplotlib
 
-from src.processing.feature_eng import clean_data, engineer_features
+from src.processing.feature_eng import prepare_data
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -18,7 +18,8 @@ def run_eda():
     
     try:
         # Load dataset
-        df = pd.DataFrame(get_rides()).pipe(clean_data).pipe(engineer_features)
+        df = pd.DataFrame(get_rides()).pipe(prepare_data)
+        
         print(f"| Loaded {len(df)} rows for analysis.")
 
         if (len(df) == 0):

@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from .feature_eng import clean_data, engineer_features
+from .feature_eng import prepare_data
 
 INTERIM_CSV = os.path.join(os.getcwd(), "data", "interim", "uber_rides_log.csv")
 PROCESSED_CSV = os.path.join(os.getcwd(), "data", "processed", "uber_dataset.csv")
@@ -18,8 +18,7 @@ def run_processing():
         print(f"| Loaded {len(df)} rows from interim data.")
         
         # Apply Pipeline
-        df = clean_data(df)
-        df = engineer_features(df)
+        df = prepare_data(df)
         
         # Save to processed directory
         df.to_csv(PROCESSED_CSV, index=False)
