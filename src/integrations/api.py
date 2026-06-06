@@ -16,7 +16,7 @@ def get_routes():
 def get_rides():
     """Fetches all processed ride data from the API."""
     try:
-        response = requests.get(f"{CONVEX_URL}/rides")
+        response = requests.get(f"{CONVEX_URL}/rides?rideType=uber_x")
         response.raise_for_status()
         return [transform_ride(ride) for ride in response.json()]
     except requests.RequestException as e:

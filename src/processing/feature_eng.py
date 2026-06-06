@@ -1,15 +1,24 @@
 import pandas as pd
+import numpy as np
 
 VALID_CATEGORIES = ['uber_x', 'uber_moto', 'comfort', 'bag']
 
 def prepare_data(df):
     df = clean_data(df)
-    df['route_name'] = df['from'] + " -> " + df['to']
 
     # Calculated features
     df = extract_time_features(df)
     df['price_per_meter'] = df.apply(lambda row: row['price'] / row['distance_m'] if row['distance_m'] > 0 else 0, axis=1)
     df['price_per_min'] = df.apply(lambda row: row['price'] / (row['estimated_time_s'] / 60) if row['estimated_time_s'] > 0 else 0, axis=1)
+    
+    df['route_avg_price'] = df.groupby('route_id')['price'].transform('mean')
+    df['route_median_price'] = df.groupby('route_id')['price'].transform('median')
+    
+    df['price_variation_from_route_avg'] = df['price'] / df['route_avg_price']
+    df['price_variation_from_route_median'] = df['price'] / df['route_median_price']
+    
+    # Drop name columns
+    df = df.drop(columns=['from', 'to', 'route_name'], errors='ignore')
     
     return df
 
@@ -55,7 +64,18 @@ def extract_time_features(df):
     
     df['hour'] = df['timestamp'].dt.hour
     df['minute'] = df['timestamp'].dt.minute
+    df['day'] = df['timestamp'].dt.day
     df['day_of_week'] = df['timestamp'].dt.dayofweek # 0=Monday, 6=Sunday
     df['is_weekend'] = df['day_of_week'].apply(lambda x: 1 if x >= 5 else 0)
     
+    df['day_sin'] = np.sin(2 * np.pi * df['day'] / 31)
+    df['day_cos'] = np.cos(2 * np.pi * df['day'] / 31)
+    
+    df['hour_sin'] = np.sin(2 * np.pi * df['hour'] / 24)
+    df['hour_cos'] = np.cos(2 * np.pi * df['hour'] / 24)
+    
+    df['weekday_sin'] = np.sin(2 * np.pi * df['day_of_week'] / 7)
+    df['weekday_cos'] = np.cos(2 * np.pi * df['day_of_week'] / 7)
+    
+    df.drop(columns=['timestamp'], inplace=True)
     return df

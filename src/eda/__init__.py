@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import json
 import matplotlib
+from matplotlib.colors import LinearSegmentedColormap
 
 from src.processing.feature_eng import prepare_data
 
@@ -34,7 +35,7 @@ def run_eda():
             "average_price_per_ride_id": df.groupby('ride_id')['price'].mean().round(2).to_dict(),
             "average_wait_time_per_ride_id": df.groupby('ride_id')['wait_time_minutes'].mean().round(2).to_dict(),
             "price_stats": df['price'].describe().round(2).to_dict(),
-            "routes_analyzed": df['route_name'].nunique()
+            "routes_analyzed": df['route_id'].nunique()
         }
         
         json_path = os.path.join(EDA_OUTPUT_DIR, "eda_summary.json")
@@ -73,17 +74,36 @@ def run_eda():
         plt.savefig(os.path.join(EDA_OUTPUT_DIR, "eda_wait_time_boxplot.png"), bbox_inches='tight', dpi=150)
         plt.close()
 
-        # Plot 4: Correlation Heatmap (numerical columns only)
-        num_cols = [
-            'price_per_meter', 'price_per_min', 'wait_time_minutes',
+        # Correlation Heatmaps
+        targets = [
+            'price', 'price_per_meter', 'price_per_min',
+            'price_variation_from_route_avg', 'price_variation_from_route_median',
+            'wait_time_minutes'
+        ]
+        numeric_features = [
             'distance_m', 'estimated_time_s',
             'temperature_celsius', 'precipitation_mm', 'weather_code',
-            'hour', 'minute', 'day_of_week', 'is_weekend'
+            'hour', 'minute', 'day', 'day_of_week', 'is_weekend',
+            'hour_sin', 'hour_cos', 'weekday_sin', 'weekday_cos', 'day_sin', 'day_cos'
         ]
+        cmap = LinearSegmentedColormap.from_list('', ['red','white','red'])
+        
+        # Plot 4: Correlation Heatmap (between numeric features and targets)
+        corr_df = df[targets + numeric_features].corr().round(2)
+        corr_targets = corr_df[targets].drop(targets, axis=0)
+        
         plt.figure(figsize=(8, 6))
-        sns.heatmap(df[num_cols].corr(), annot=True, cmap='coolwarm', fmt=".2f")
-        plt.title("Matriz de Correlação das Features")
+        sns.heatmap(corr_targets, annot=True, cmap=cmap, fmt=".2f", vmin=-1, vmax=1, center=0)
+        plt.title("Matriz de Correlação entre Features e Alvos")
         plt.savefig(os.path.join(EDA_OUTPUT_DIR, "eda_correlation_heatmap.png"), bbox_inches='tight', dpi=150)
+        plt.close()
+        
+        # Plot 5: Correlation Heatmap (between numeric features only)
+        corr_numeric = df[numeric_features].corr().round(2)
+        plt.figure(figsize=(8, 6))
+        sns.heatmap(corr_numeric, annot=True, cmap=cmap, fmt=".2f", vmin=-1, vmax=1, center=0)
+        plt.title("Matriz de Correlação das Features Numéricas")
+        plt.savefig(os.path.join(EDA_OUTPUT_DIR, "eda_correlation_features_heatmap.png"), bbox_inches='tight', dpi=150)
         plt.close()
 
         print("    | EDA plots saved successfully as PNGs.")

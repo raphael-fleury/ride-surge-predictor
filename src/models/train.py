@@ -19,20 +19,16 @@ def run_training():
     
     print(f"| Total rides loaded: {len(df)}")
 
-    # Sort Chronologically
-    df['timestamp'] = pd.to_datetime(df['timestamp'])
-    df = df.sort_values('timestamp').reset_index(drop=True)
-
     # Features and Target
-    target = 'price'
+    target = 'price_variation_from_route_avg'
     
     # Categorical features need One-Hot Encoding
-    categorical_features = ['route_name', 'ride_id', 'weather_code']
+    categorical_features = []
     
     # Numeric features need Scaling
     numeric_features = [
-        'wait_time_minutes', 'temperature_celsius', 'precipitation_mm', 
-        'hour', 'minute', 'day_of_week', 'is_weekend'
+        'temperature_celsius', 'precipitation_mm', 'is_weekend',
+        'hour_sin', 'hour_cos', 'weekday_sin', 'weekday_cos', 'day_sin', 'day_cos'
     ]
 
     X = df[categorical_features + numeric_features]
